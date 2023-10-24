@@ -75,7 +75,7 @@ return new class extends Migration
             $table->string('alamat')->nullable();
             $table->string('tempat_lahir', 64)->nullable();
             $table->date('tanggal_lahir')->nullable();
-            $table->set('gender', ['laki', 'perempuan']);
+            $table->set('gender', ['Laki', 'Perempuan']);
             $table->string('nama_ayah', 64)->nullable();
             $table->string('nama_ibu', 64)->nullable();
             $table->string('no_hp', 16)->nullable();

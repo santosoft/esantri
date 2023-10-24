@@ -23,10 +23,10 @@ class Muhaffizh extends Model
         return $this->belongsTo(User::class)->where('role', 'Muhaffizh');
     }
 
-    public function group(): BelongsTo
-    {
-        return $this->belongsTo(Group::class);
-    }
+    // public function group(): BelongsTo
+    // {
+    //     return $this->belongsTo(Group::class);
+    // }
 
     public function groups(): HasMany
     {

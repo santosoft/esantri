@@ -36,9 +36,9 @@ class MuhaffizhResource extends Resource
                 Forms\Components\Select::make('unit_id')->label('Unit')
                     ->options(Unit::all()->pluck('nama', 'id'))
                     ->preload(10)->searchable(),
-                Forms\Components\Select::make('group_id')->label('Group')
-                    ->options(Group::all()->pluck('nama', 'id'))
-                    ->preload(10)->searchable(),
+                // Forms\Components\Select::make('group_id')->label('Group')
+                //     ->options(Group::all()->pluck('nama', 'id'))
+                //     ->preload(10)->searchable(),
                 Forms\Components\Select::make('user_id')->label('Akun User')
                     ->relationship('user', 'email')
                     ->createOptionForm([
@@ -71,7 +71,7 @@ class MuhaffizhResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('no_induk')->searchable(),
                 Tables\Columns\TextColumn::make('nama')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('group.nama')->searchable(),
+                // Tables\Columns\TextColumn::make('group.nama')->searchable(),
                 Tables\Columns\TextColumn::make('unit.nama')->searchable(),
                 Tables\Columns\TextColumn::make('user.email')->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -100,8 +100,8 @@ class MuhaffizhResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('Group')
-                    ->relationship('group', 'nama'),
+                // Tables\Filters\SelectFilter::make('Group')
+                //     ->relationship('group', 'nama'),
                 Tables\Filters\SelectFilter::make('Unit')
                     ->relationship('unit', 'nama'),
                 Tables\Filters\TrashedFilter::make(),
