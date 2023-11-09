@@ -2,18 +2,21 @@
 
 #### A Web-based Pesantren Management System built using [filament v3](https://filamentphp.com).
 
-## Requirements:
+### Requirements:
 
-- MariaDB >= 10.2.1
+- RDBMS (MySQL / PostgreSQL)
 - PHP ^8.1
+- PHP Extensions: bz2, curl, fileinfo, gd, mbstring, xml, zip
+### Requirement for Development:
+- NodeJS ^16
 ---
 
-## Installation：
+### Installation：
 
 > ```
 > composer install
 > cp .env.example .env
 > php artisan key:generate
+> php artisan storage:link
 > php artisan migrate --seed
-> npm run build
 > ```
