@@ -7,6 +7,7 @@ use App\Filament\Resources\AbsenResource\RelationManagers;
 use App\Models\Absen;
 use App\Models\Group;
 use App\Models\Muhaffizh;
+use App\Models\Pekan;
 use App\Models\Santri;
 use App\Models\Unit;
 use Filament\Forms;
@@ -28,44 +29,58 @@ class AbsenResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $thisWeek = date('Ym').(date('W') - date('W', mktime(0,0,0,date('n'),0,date('Y'))));
+        $defaultPekanId = Pekan::find($thisWeek)?->id;
         return $form
             ->schema([
-                Forms\Components\Select::make('santri_id')->label('Santri')
-                    ->options(Santri::all()->pluck('nama', 'id'))
-                    ->preload(10)->searchable(),
-                Forms\Components\Select::make('group_id')->label('Group')
-                    ->options(Group::all()->pluck('nama', 'id'))
-                    ->preload(10)->searchable()->reactive()
-                    ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        $group = Group::find($state);
-                        $set('muhaffizh_id', $group->muhaffizh_id);
-                        $set('unit_id', $group->unit_id);
-                    }),
-                Forms\Components\Select::make('muhaffizh_id')->label('Muhaffizh')
-                    ->options(Muhaffizh::all()->pluck('nama', 'id'))
-                    ->preload(10)->searchable(),
-                Forms\Components\Select::make('unit_id')->label('Unit')
-                    ->options(Unit::all()->pluck('nama', 'id'))
-                    ->preload(10)->searchable(),
-                Forms\Components\Section::make('Periode')->schema([
-                    Forms\Components\Select::make('tahun')->prefix('Tahun')
-                        ->options(array_combine($a = [date('Y'), date('Y')-1], $a))
-                        ->default(date('Y'))->hiddenLabel(),
-                    Forms\Components\Select::make('bulan')->prefix('Bulan')
-                        ->options(array_combine($keys = range(1,12), array_map(fn ($n) => date('F', strtotime("2023-$n-15")), $keys)))
-                        ->default(date('n'))->hiddenLabel(),
-                    Forms\Components\TextInput::make('pekan')->prefix('Pekan')
-                        ->numeric()->minValue(1)->maxValue(5)->hiddenLabel()
-                        ->default((date('W') - date('W', mktime(0,0,0,date('n'),0,date('Y'))))),
-                ])->columns(3),
+                Forms\Components\Section::make()->compact()->schema([
+                    Forms\Components\Select::make('santri_id')->label('Santri')
+                        ->options(Santri::all()->pluck('nama', 'id'))
+                        ->preload(10)->searchable()->reactive()->required()
+                        ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            if($santri = Santri::find($state)) {
+                                $set('level_santri', $santri->level_santri);
+                                if($group = $santri->group) {
+                                    $set('group_id', $group->id);
+                                    $set('muhaffizh_id', $group->muhaffizh_id);
+                                    $set('unit_id', $group->unit_id);
+                                }
+                            } else {
+                                $set('level_santri', '');
+                                $set('group_id', '');
+                                $set('muhaffizh_id', '');
+                                $set('unit_id', '');
+                            }
+                        })->columnSpan(2),
+                    Forms\Components\Select::make('group_id')->label('Group')
+                        ->options(Group::all()->pluck('nama', 'id'))
+                        ->preload(10)->searchable()->reactive()->required()
+                        ->afterStateUpdated(function ($state, Forms\Set $set) {
+                            $group = Group::find($state);
+                            $set('muhaffizh_id', $group->muhaffizh_id);
+                            $set('unit_id', $group->unit_id);
+                        }),
+                    Forms\Components\Select::make('pekan_id')->label('Pekan')
+                        ->relationship(name: 'pekan', titleAttribute: 'id')
+                        ->preload(10)->searchable()->required()->default($defaultPekanId),
+                    Forms\Components\Select::make('muhaffizh_id')->label('Muhaffizh')
+                        ->options(Muhaffizh::all()->pluck('nama', 'id'))
+                        ->preload(10)->searchable()->columnSpan(2),
+                    Forms\Components\Select::make('unit_id')->label('Unit')
+                        ->options(Unit::all()->pluck('nama', 'id'))
+                        ->preload(10)->searchable(),
+                    Forms\Components\TextInput::make('level_santri')
+                        ->numeric()->minValue(0)->maxValue(6)
+                        ->extraInputAttributes(['class'=>'text-right']),
+                ])->columns(4),
                 Forms\Components\Section::make('Kehadiran')->schema([
-                    Forms\Components\TextInput::make('hadir')->prefix('Hadir')
+                    Forms\Components\TextInput::make('absen_hadir')->prefix('Hadir')
                         ->numeric()->minValue(0)->maxValue(30)->hiddenLabel(),
-                    Forms\Components\TextInput::make('izin')->prefix('Izin')
+                    Forms\Components\TextInput::make('absen_izin')->prefix('Izin')
                         ->numeric()->minValue(0)->maxValue(30)->hiddenLabel(),
-                    Forms\Components\TextInput::make('sakit')->prefix('Sakit')
+                    Forms\Components\TextInput::make('absen_sakit')->prefix('Sakit')
                         ->numeric()->minValue(0)->maxValue(30)->hiddenLabel(),
-                    Forms\Components\TextInput::make('alpha')->prefix('Alpha')
+                    Forms\Components\TextInput::make('absen_alpha')->prefix('Alpha')
                         ->numeric()->minValue(0)->maxValue(30)->hiddenLabel(),
                 ])->columns(4),
             ]);
@@ -75,22 +90,18 @@ class AbsenResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('pekan.periode')->label('Periode')->sortable(),
+                Tables\Columns\TextColumn::make('pekan.pekan')->sortable()->alignRight(),
                 Tables\Columns\TextColumn::make('santri.nama')->sortable(),
                 Tables\Columns\TextColumn::make('muhaffizh.nama')->sortable(),
-                Tables\Columns\TextColumn::make('unit.nama')->sortable(),
-                Tables\Columns\TextColumn::make('group.nama')->sortable(),
-                Tables\Columns\TextColumn::make('periode'),
-                Tables\Columns\TextColumn::make('tahun')
-                    ->numeric()->sortable()
+                Tables\Columns\TextColumn::make('unit.nama')->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('bulan')
-                    ->numeric()->sortable()
+                Tables\Columns\TextColumn::make('group.nama')->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('pekan')->sortable(),
-                Tables\Columns\TextColumn::make('hadir')->alignRight(),
-                Tables\Columns\TextColumn::make('izin')->alignRight(),
-                Tables\Columns\TextColumn::make('sakit')->alignRight(),
-                Tables\Columns\TextColumn::make('alpha')->alignRight(),
+                Tables\Columns\TextColumn::make('absen_hadir')->label('Hadir')->alignRight(),
+                Tables\Columns\TextColumn::make('absen_izin')->label('Izin')->alignRight(),
+                Tables\Columns\TextColumn::make('absen_sakit')->label('Sakit')->alignRight(),
+                Tables\Columns\TextColumn::make('absen_alpha')->label('Alpha')->alignRight(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -107,9 +118,9 @@ class AbsenResource extends Resource
                     ->relationship('muhaffizh', 'nama')->preload(),
                 Tables\Filters\SelectFilter::make('Santri')->multiple()
                     ->relationship('santri', 'nama'),
-                Tables\Filters\SelectFilter::make('Tahun')->multiple()
-                    ->options(array_combine($a = [date('Y'), date('Y')-1], $a))
-                    ->default(date('Y')),
+                // Tables\Filters\SelectFilter::make('Tahun')->multiple()
+                //     ->options(array_combine($a = [date('Y'), date('Y')-1], $a))
+                //     ->default(date('Y')),
 
                 Tables\Filters\TrashedFilter::make(),
             ])

@@ -3,12 +3,13 @@
 namespace App\Filament\Resources\SantriResource\Pages;
 
 use App\Filament\Resources\SantriResource;
-use App\Models\Absen;
-use App\Models\Matan;
-use App\Models\Mutqin;
+// use App\Models\Absen;
+// use App\Models\Matan;
+// use App\Models\Mutqin;
 use App\Models\Santri;
-use App\Models\Tahfizh;
-use App\Models\Tahsin;
+use App\Models\Setoran;
+// use App\Models\Tahfizh;
+// use App\Models\Tahsin;
 use Filament\Resources\Pages\Page;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Grid;
@@ -26,11 +27,12 @@ class RaporSantri extends Page
     protected static string $view = 'filament.resources.santri-resource.pages.rapor-santri';
 
     public ?Santri $santri;
-    public ?Tahsin $tahsin;
+    public ?Setoran $setoran;
+  /*   public ?Tahsin $tahsin;
     public ?Tahfizh $tahfizh;
     public ?Mutqin $mutqin;
     public ?Matan $matan;
-    public ?Absen $absen;
+    public ?Absen $absen; */
     public string $periode, $pekan;
 
     public function mount(Santri $record, ?string $periode, ?string $pekan): void {
@@ -39,7 +41,9 @@ class RaporSantri extends Page
         $this->pekan = $pekan;
         $tahun = substr($periode,0,strpos($periode,'-'));
         $bulan = (int) substr($periode,strpos($periode,'-')+1);
-        $this->tahsin = $this->santri->tahsins
+        $pekanId = str_replace('-', '', $periode).$pekan;
+        $this->setoran = $this->santri->setorans->where('pekan_id', $pekanId)->first();
+        /* $this->tahsin = $this->santri->tahsins
             ->where('tahun',$tahun)
             ->where('bulan',$bulan)
             ->first();
@@ -58,7 +62,7 @@ class RaporSantri extends Page
         $this->absen = $this->santri->absens
             ->where('tahun',$tahun)
             ->where('bulan',$bulan)
-            ->first();
+            ->first(); */
     }
 
     public function raporInfolist(Infolist $infolist): Infolist {
@@ -69,28 +73,28 @@ class RaporSantri extends Page
                 'nama_santri' => $this->santri->nama,
                 'kelas'       => $this->santri->angkatan_kelas,
                 'tahsin' => [
-                    'level'           => data_get($this->tahsin,'level_santri'),
-                    'capaian'         => data_get($this->tahsin,'capaian'),
-                    'posisi_terakhir' => data_get($this->tahsin,'posisi_terakhir'),
+                    'level'           => data_get($this->setoran,'level_santri'),
+                    'capaian'         => data_get($this->setoran,'tahsin_capaian'),
+                    'posisi_terakhir' => data_get($this->setoran,'tahsin_posisi_terakhir'),
                 ],
                 'tahfizh' => [
                     'grade'           => data_get($this->santri,'grade'),
-                    'capaian'         => data_get($this->tahfizh,'halaman'),
-                    'posisi_terakhir' => data_get($this->tahfizh,'posisi_terakhir'),
-                    'jumlah'          => data_get($this->tahfizh,'total_tahfizh'),
+                    'capaian'         => data_get($this->setoran,'tahfizh_halaman'),
+                    'posisi_terakhir' => data_get($this->setoran,'tahfizh_posisi_terakhir'),
+                    'jumlah'          => data_get($this->setoran,'total_tahfizh'),
                 ],
                 'mutqin' => [
-                    'capaian' => data_get($this->mutqin,'halaman'),
-                    'jumlah'  => data_get($this->mutqin,'total_mutqin'),
+                    'capaian' => data_get($this->setoran,'mutqin_halaman'),
+                    'jumlah'  => data_get($this->setoran,'total_mutqin'),
                 ],
                 'matan' => [
-                    'matan_jazari' => data_get($this->matan,'matan_jazari'),
+                    'matan_jazari' => data_get($this->setoran,'matan_jazari'),
                 ],
                 'absen' => [
-                    'hadir' => data_get($this->absen,'hadir'),
-                    'izin'  => data_get($this->absen,'izin'),
-                    'sakit' => data_get($this->absen,'sakit'),
-                    'alpha' => data_get($this->absen,'alpha'),
+                    'hadir' => data_get($this->setoran,'absen_hadir'),
+                    'izin'  => data_get($this->setoran,'absen_izin'),
+                    'sakit' => data_get($this->setoran,'absen_sakit'),
+                    'alpha' => data_get($this->setoran,'absen_alpha'),
                 ],
             ])
             ->schema([

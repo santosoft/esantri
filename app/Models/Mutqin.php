@@ -14,6 +14,11 @@ class Mutqin extends Model
     protected $appends = ['periode'];
     protected $guarded = ['id'];
 
+    public function pekan(): BelongsTo
+    {
+        return $this->belongsTo(Pekan::class);
+    }
+
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
@@ -35,6 +40,6 @@ class Mutqin extends Model
     }
 
     public function getPeriodeAttribute() {
-        return date("M'y", mktime(0,0,0, $this->bulan, 15, $this->tahun));
+        return $this->pekan?->periode;
     }
 }

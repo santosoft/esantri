@@ -38,6 +38,11 @@ class Santri extends Model
         return $this->belongsTo(Muhaffizh::class);
     }
 
+    public function setorans(): HasMany
+    {
+        return $this->hasMany(Setoran::class);
+    }
+
     public function tahsins(): HasMany
     {
         return $this->hasMany(Tahsin::class);
