@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Group;
+use App\Models\Pekan;
 use App\Models\Santri;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,9 +24,7 @@ class AbsenFactory extends Factory
             'group_id' => Group::factory(),
             'unit_id' => fn (array $attributes) => Group::find($attributes['group_id'])->unit_id,
             'muhaffizh_id' => fn (array $attributes) => Group::find($attributes['group_id'])->muhaffizh_id,
-            'tahun' => date('Y'),
-            'bulan' => date('n') - rand(0,2),
-            'pekan' => rand(1,4),
+            'pekan_id' => Pekan::factory(),
             'hadir' => $h = rand(7,12),
             'izin' => $i = (($x = 12-$h-rand(0,2)) < 0) ? 0 : $x,
             'sakit' => $s = (($x = 12-$h-$i-rand(0,2)) < 0) ? 0 : $x,
